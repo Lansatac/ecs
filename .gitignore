@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+ecs.so
+ecs.dylib
+ecs.dll
+ecs.a
+ecs.lib
+ecs-test-*
+*.exe
+*.o
+*.obj
+*.lst
