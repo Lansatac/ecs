@@ -10,81 +10,58 @@ class ComponentRegistry(ModuleNames...)
 	static foreach(Module; ModuleNames)
 	{
 		mixin("import " ~ Module ~ ";");
+	}
 
-		template StaticFilter(alias Pred, T...)
-		{
-			import std.meta;
-		    static if (T.length == 0)
-		        alias AliasSeq!() StaticFilter;
-		    else static if (Pred!(T[0]))
-		        alias AliasSeq!(T[0], StaticFilter!(Pred, T[1 .. $])) StaticFilter;
-		    else
-		        alias StaticFilter!(Pred, T[1 .. $]) StaticFilter;
-		}
+	alias Components = allComponentsInModules!ModuleNames;
 
-		template isComponent(string name)
-		{
-			import std.traits;
-		mixin("
-		      static if (hasUDA!(" ~ name ~ " , Component))
-		          enum bool isComponent = true;
-		      else
-		        enum bool isComponent = false;");
-		}
+	static foreach(ComponentType; Components)
+	{
+		mixin(
+			"public void add(Entity entity, " ~ ComponentType ~ " component)" ~
+			"{" ~
+				"addComponent(entity, component, " ~ ComponentType ~ "Registry);" ~
+			"}"
+		);
 
-		template extractComponents(string moduleName, members...)
-		{
-		    alias StaticFilter!(isComponent,members) extractComponents;
-		}
+		mixin(
+			"public void remove" ~ ComponentType ~ "(Entity entity)" ~
+			"{" ~
+				"removeComponent(entity, " ~ ComponentType ~ "Registry);" ~
+			"}"
+		);
 
-		template components(string moduleName)
-		{
-		    mixin("alias extractComponents!(moduleName, __traits(allMembers, " ~
-		moduleName ~ ")) components;");
-		}
+		mixin(
+			"public bool has" ~ ComponentType ~ "(Entity entity)" ~
+			"{" ~
+				"return hasComponent(entity, " ~ ComponentType ~ "Registry);" ~
+			"}"
+		);
+	
+		mixin(
+			"public " ~ ComponentType ~ " get" ~ ComponentType ~ "(Entity entity)" ~
+			"{" ~
+				"return getComponent(entity, " ~ ComponentType ~ "Registry);" ~
+			"}"
+		);
+	
+		mixin(
+			"public " ~ ComponentType ~ "[] getAll" ~ ComponentType ~ "(Entity entity)\n" ~
+			"{" ~
+				"return getAllComponents!" ~ ComponentType ~ "(" ~ ComponentType ~ "Registry);" ~
+			"}"
+		);
 
-		alias Components = components!Module;
+		mixin("" ~ ComponentType ~ "[Entity] " ~ ComponentType ~ "Registry;");
+	}
 
+
+
+	public void removeAll(Entity entity)
+	{
 		static foreach(ComponentType; Components)
 		{
-			mixin(
-				"public void add(Entity entity, " ~ ComponentType ~ " component)" ~
-				"{" ~
-					"addComponent(entity, component, " ~ ComponentType ~ "registry);" ~
-				"}"
-			);
-
-			mixin(
-				"public void remove" ~ ComponentType ~ "(Entity entity)" ~
-				"{" ~
-					"removeComponent(entity, " ~ ComponentType ~ "registry);" ~
-				"}"
-			);
-
-			mixin(
-				"public bool has" ~ ComponentType ~ "(Entity entity)" ~
-				"{" ~
-					"return hasComponent(entity, " ~ ComponentType ~ "registry);" ~
-				"}"
-			);
-		
-			mixin(
-				"public " ~ ComponentType ~ " get" ~ ComponentType ~ "(Entity entity)" ~
-				"{" ~
-					"return getComponent(entity, " ~ ComponentType ~ "registry);" ~
-				"}"
-			);
-		
-			mixin(
-				"public " ~ ComponentType ~ "[] getAll" ~ ComponentType ~ "(Entity entity)\n" ~
-				"{" ~
-					"return getAllComponents!" ~ ComponentType ~ "(" ~ ComponentType ~ "registry);" ~
-				"}"
-			);
-
-			mixin("" ~ ComponentType ~ "[Entity] " ~ ComponentType ~ "registry;");
+			mixin("removeComponent(entity, " ~ ComponentType ~ "Registry);");
 		}
-
 	}
 
 	private void addComponent(TComponent)(Entity entity, TComponent component, ref TComponent[Entity] storage)
@@ -113,3 +90,33 @@ class ComponentRegistry(ModuleNames...)
 		return storage.byValue().array;
 	}
 }
+
+
+
+	template allComponentsInModule(string moduleName)
+	{
+		mixin("import " ~ moduleName ~ ";");
+		template isComponent(string name)
+		{
+			import std.traits;
+			mixin("
+				static if (hasUDA!(" ~ name ~ " , Component))
+					enum bool isComponent = true;
+				else
+					enum bool isComponent = false;");
+		}
+
+		template filterComponents(members...)
+		{
+			import std.meta;
+			alias Filter!(isComponent,members) filterComponents;
+		}
+
+		mixin("alias filterComponents!(__traits(allMembers, " ~ moduleName ~ ")) allComponentsInModule;");
+	}
+
+	template allComponentsInModules(Modules...)
+	{
+		import std.meta;
+		alias allComponentsInModules = staticMap!(allComponentsInModule, Modules);
+	}
