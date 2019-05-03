@@ -1,23 +1,53 @@
 module entities.entityRegistry;
 
 import entities.entity;
+import entities.componentRegistry;
 
-class EntityRegistry(ComponentModules...)
+template EntityRegistry(ComponentModules...)
 {
-	alias Registry = ComponentRegistry!(ComponentModules);
+	alias Components = ComponentRegistry!(ComponentModules);
 
-	private Registry registry = new Registry();
-
-	Entity create()
+	struct Entity
 	{
-		return Entity(nextID++);
+		this(EntityID id, Components registry)
+		{
+			this.id = id;
+			this._registry = registry;
+		}
+
+		immutable EntityID id;
+		private Components _registry;
+		Components registry() { return _registry; }
+
 	}
 
-	void destroy(Entity entity)
+	class Registry
 	{
-		registry.removeAll(entity);
-	}
 
-private:
-	ulong nextID = 1;
+		private Components registry = new Components();
+
+		Entity create()
+		{
+			return Entity(EntityID(nextID++), registry);
+		}
+
+		void destroy(EntityID entity)
+		{
+			registry.removeAll(entity);
+		}
+
+	private:
+		ulong nextID = 1;
+	}
+}
+
+unittest
+{
+	alias Entities = EntityRegistry!();
+	auto entities = new Entities.Registry();
+
+	auto entity1 = entities.create();
+	auto entity2 = entities.create();
+	
+	assert(entity1.id != entity2.id);
 }
