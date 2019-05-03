@@ -9,6 +9,8 @@ template EntityRegistry(ComponentModules...)
 
 	struct Entity
 	{
+		alias id this;
+
 		this(EntityID id, Components registry)
 		{
 			this.id = id;
@@ -22,22 +24,22 @@ template EntityRegistry(ComponentModules...)
 
 		bool has(TComponent)()
 		{
-			return _registry.has!TComponent(this.id);
+			return _registry.has!TComponent(this);
 		}
 
 		Entity add(TComponent)(TComponent component)
 		{
-			_registry.add(this.id, component);
+			_registry.add(this, component);
 			return this;
 		}
 		Entity remove(TComponent)()
 		{
-			_registry.remove!TComponent(this.id);
+			_registry.remove!TComponent(this);
 			return this;
 		}
 		TComponent get(TComponent)()
 		{
-			return _registry.get!TComponent(this.id);
+			return _registry.get!TComponent(this);
 		}
 	}
 
@@ -99,5 +101,19 @@ unittest
 
 
 	entity.remove!TestComponent;
+	assert(entity.has!TestComponent == false);
+}
+
+
+unittest
+{
+	alias Entities = EntityRegistry!("entities.entityRegistry");
+	auto entities = new Entities.Registry();
+	auto entity = entities.create();
+
+	entity.add(TestComponent(5));
+	assert(entity.has!TestComponent == true);
+
+	entities.destroy(entity);
 	assert(entity.has!TestComponent == false);
 }
