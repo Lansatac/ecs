@@ -24,28 +24,28 @@ class ComponentRegistry(ModuleNames...)
 		);
 
 		mixin(
-			"public void remove" ~ ComponentType ~ "(EntityID entity)" ~
+			"public void remove(T:" ~ ComponentType ~ ")(EntityID entity)" ~
 			"{" ~
 				"removeComponent(entity, " ~ ComponentType ~ "Registry);" ~
 			"}"
 		);
 
 		mixin(
-			"public bool has" ~ ComponentType ~ "(EntityID entity)" ~
+			"public bool has(T:" ~ ComponentType ~ ")(EntityID entity)" ~
 			"{" ~
 				"return hasComponent(entity, " ~ ComponentType ~ "Registry);" ~
 			"}"
 		);
 	
 		mixin(
-			"public " ~ ComponentType ~ " get" ~ ComponentType ~ "(EntityID entity)" ~
+			"public " ~ ComponentType ~ " get(T:" ~ ComponentType ~ ")(EntityID entity)" ~
 			"{" ~
 				"return getComponent(entity, " ~ ComponentType ~ "Registry);" ~
 			"}"
 		);
 	
 		mixin(
-			"public " ~ ComponentType ~ "[] getAll" ~ ComponentType ~ "(EntityID entity)\n" ~
+			"public " ~ ComponentType ~ "[] getAll(T:" ~ ComponentType ~ ")(EntityID entity)\n" ~
 			"{" ~
 				"return getAllComponents!" ~ ComponentType ~ "(" ~ ComponentType ~ "Registry);" ~
 			"}"
@@ -145,26 +145,26 @@ unittest
 	componentA.a = 5;
 	componentA.b = 10;
 
-	assert(registry.hasTestComponentA(entity) == false);
+	assert(registry.has!TestComponentA(entity) == false);
 	registry.add(entity, componentA);
-	assert(registry.hasTestComponentA(entity) == true);
-	assert(registry.getTestComponentA(entity) == componentA);
-	registry.removeTestComponentA(entity);
-	assert(registry.hasTestComponentA(entity) == false);
+	assert(registry.has!TestComponentA(entity) == true);
+	assert(registry.get!TestComponentA(entity) == componentA);
+	registry.remove!TestComponentA(entity);
+	assert(registry.has!TestComponentA(entity) == false);
 
 
 	auto componentB = TestComponentB();
 	componentB.a = "some";
-	assert(registry.hasTestComponentB(entity) == false);
+	assert(registry.has!TestComponentB(entity) == false);
 	registry.add(entity, componentB);
-	assert(registry.hasTestComponentB(entity) == true);
+	assert(registry.has!TestComponentB(entity) == true);
 
 
 	registry.add(entity, componentA);
 	registry.add(entity, componentB);
-	assert(registry.hasTestComponentA(entity) == true);
-	assert(registry.hasTestComponentB(entity) == true);
+	assert(registry.has!TestComponentA(entity) == true);
+	assert(registry.has!TestComponentB(entity) == true);
 	registry.removeAll(entity);
-	assert(registry.hasTestComponentA(entity) == false);
-	assert(registry.hasTestComponentB(entity) == false);
+	assert(registry.has!TestComponentA(entity) == false);
+	assert(registry.has!TestComponentB(entity) == false);
 }
