@@ -1,7 +1,7 @@
-module entities.componentRegistry;
+module ecs.entities.componentRegistry;
 
-import entities.component;
-import entities.entity;
+import ecs.entities.component;
+import ecs.entities.entity;
 
 
 @safe
@@ -137,7 +137,7 @@ version(unittest)
 
 unittest
 {
-	auto registry = new ComponentRegistry!("entities.componentRegistry");
+	auto registry = new ComponentRegistry!("ecs.entities.componentRegistry");
 
 	auto entity = EntityID(1);
 

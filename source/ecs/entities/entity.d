@@ -1,4 +1,4 @@
-module entities.entity;
+module ecs.entities.entity;
 
 @safe
 struct EntityID

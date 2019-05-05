@@ -1,7 +1,7 @@
-module entities.entityRegistry;
+module ecs.entities.entityRegistry;
 
-import entities.entity;
-import entities.componentRegistry;
+import ecs.entities.entity;
+import ecs.entities.componentRegistry;
 
 template EntityRegistry(ComponentModules...)
 {
@@ -68,7 +68,7 @@ template EntityRegistry(ComponentModules...)
 
 version(unittest)
 {
-	import entities.component;
+	import ecs.entities.component;
 
 	@Component
 	struct TestComponent
@@ -90,7 +90,7 @@ unittest
 
 unittest
 {
-	alias Entities = EntityRegistry!("entities.entityRegistry");
+	alias Entities = EntityRegistry!("ecs.entities.entityRegistry");
 	auto entities = new Entities.Registry();
 	auto entity = entities.create();
 
@@ -107,7 +107,7 @@ unittest
 
 unittest
 {
-	alias Entities = EntityRegistry!("entities.entityRegistry");
+	alias Entities = EntityRegistry!("ecs.entities.entityRegistry");
 	auto entities = new Entities.Registry();
 	auto entity = entities.create();
 
