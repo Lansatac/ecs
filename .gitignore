@@ -12,3 +12,4 @@ ecs-test-*
 *.o
 *.obj
 *.lst
+*.sublime-workspace
