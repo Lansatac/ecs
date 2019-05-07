@@ -3,91 +3,135 @@ module ecs.entities.componentRegistry;
 import ecs.entities.component;
 import ecs.entities.entity;
 
-
-@safe
-class ComponentRegistry(ModuleNames...)
+template ComponentRegistry(ComponentModules...)
 {
-	static foreach(Module; ModuleNames)
+	@safe
+	class Registry
 	{
-		mixin("import " ~ Module ~ ";");
-	}
-
-	alias Components = allComponentsInModules!ModuleNames;
-
-	static foreach(ComponentType; Components)
-	{
-		mixin(
-			"public void add(EntityID entity, " ~ ComponentType ~ " component)" ~
-			"{" ~
-				"addComponent(entity, component, " ~ ComponentType ~ "Registry);" ~
-			"}"
-		);
-
-		mixin(
-			"public void remove(T:" ~ ComponentType ~ ")(EntityID entity)" ~
-			"{" ~
-				"removeComponent(entity, " ~ ComponentType ~ "Registry);" ~
-			"}"
-		);
-
-		mixin(
-			"public bool has(T:" ~ ComponentType ~ ")(EntityID entity)" ~
-			"{" ~
-				"return hasComponent(entity, " ~ ComponentType ~ "Registry);" ~
-			"}"
-		);
-	
-		mixin(
-			"public " ~ ComponentType ~ " get(T:" ~ ComponentType ~ ")(EntityID entity)" ~
-			"{" ~
-				"return getComponent(entity, " ~ ComponentType ~ "Registry);" ~
-			"}"
-		);
-	
-		mixin(
-			"public " ~ ComponentType ~ "[] getAll(T:" ~ ComponentType ~ ")(EntityID entity)\n" ~
-			"{" ~
-				"return getAllComponents!" ~ ComponentType ~ "(" ~ ComponentType ~ "Registry);" ~
-			"}"
-		);
-
-		mixin("" ~ ComponentType ~ "[EntityID] " ~ ComponentType ~ "Registry;");
-	}
-
-
-
-	public void removeAll(EntityID entity)
-	{
-		static foreach(ComponentType; Components)
+		static foreach(Module; ComponentModules)
 		{
-			mixin("removeComponent(entity, " ~ ComponentType ~ "Registry);");
+			mixin("import " ~ Module ~ ";");
+		}
+
+		alias Components = allComponentsInModules!ComponentModules;
+
+		static foreach(ComponentType; Components)
+		{		
+			mixin(
+				"private EntitySignal _on" ~ ComponentType ~ "Added = new EntitySignal;" ~
+				"public EntitySignal OnAdded(T:" ~ ComponentType ~ ")()" ~
+				"{" ~
+					"return _on" ~ ComponentType ~ "Added;" ~
+				"}"
+			);
+
+			mixin(
+				"private ComponentSignal!" ~ ComponentType ~ " _on" ~ ComponentType ~ "Removed = new ComponentSignal!" ~ ComponentType ~ ";" ~
+				"public ComponentSignal!" ~ ComponentType ~ " OnRemoved(T:" ~ ComponentType ~ ")()" ~
+				"{" ~
+					"return _on" ~ ComponentType ~ "Removed;" ~
+				"}"
+			);
+
+			mixin("private " ~ ComponentType ~ "[EntityID] " ~ ComponentType ~ "Registry;");
+			mixin(
+				"private ref " ~ ComponentType ~ "[EntityID] " ~ "registryStorage(T : " ~ ComponentType ~ ")()" ~
+				"{" ~
+					"return " ~ ComponentType ~ "Registry;" ~
+				"}"
+				);
+		}
+
+
+
+		public void removeAll(EntityID entity)
+		{
+			static foreach(ComponentType; Components)
+			{
+				mixin("remove!" ~ ComponentType ~ "(entity);");
+			}
+		}
+
+		void add(TComponent)(EntityID entity, TComponent component)
+		{
+			registryStorage!TComponent[entity] = component;
+			OnAdded!TComponent.emit(Entity(entity, this));
+		}
+
+		void remove(TComponent)(EntityID entity)
+		{
+			auto component = get!TComponent(entity);
+			registryStorage!TComponent.remove(entity);
+			OnRemoved!TComponent.emit(Entity(entity, this), component);
+		}
+
+		bool has(TComponent)(EntityID entity)
+		{
+			return (entity in registryStorage!TComponent) != null;
+		}
+
+		TComponent get(TComponent)(EntityID entity)
+		{
+			return registryStorage!TComponent[entity];
+		}
+
+		private TComponent[] getAllComponents(TComponent)()
+		{
+			import std.range;
+			return registryStorage!TComponent.byValue().array;
 		}
 	}
 
-	private void addComponent(TComponent)(EntityID entity, TComponent component, ref TComponent[EntityID] storage)
+
+	struct Entity
 	{
-		storage[entity] = component;
+		alias id this;
+
+		this(EntityID id, Registry registry)
+		{
+			this.id = id;
+			this._registry = registry;
+		}
+
+		immutable EntityID id;
+		private Registry _registry;
+		Registry componentRegistry() { return _registry; }
+
+		bool has(TComponent)()
+		{
+			return _registry.has!TComponent(this);
+		}
+
+		Entity add(TComponent)(TComponent component)
+		{
+			_registry.add(this, component);
+			return this;
+		}
+		Entity remove(TComponent)()
+		{
+			_registry.remove!TComponent(this);
+			return this;
+		}
+		TComponent get(TComponent)()
+		{
+			return _registry.get!TComponent(this);
+		}
 	}
 
-	private void removeComponent(TComponent)(EntityID entity, ref TComponent[EntityID] storage)
+	@trusted // bleh :(
+	class EntitySignal
 	{
-		storage.remove(entity);
+		import std.signals;
+
+		mixin Signal!(Entity);
 	}
 
-	private bool hasComponent(TComponent)(EntityID entity, ref TComponent[EntityID] storage)
+	@trusted // bleh :(
+	class ComponentSignal(TComponent)
 	{
-		return (entity in storage) != null;
-	}
+		import std.signals;
 
-	private TComponent getComponent(TComponent)(EntityID entity, ref TComponent[EntityID] storage)
-	{
-		return storage[entity];
-	}
-
-	private TComponent[] getAllComponents(TComponent)(ref TComponent[EntityID] storage)
-	{
-		import std.range;
-		return storage.byValue().array;
+		mixin Signal!(Entity, TComponent);
 	}
 }
 
@@ -137,7 +181,8 @@ version(unittest)
 
 unittest
 {
-	auto registry = new ComponentRegistry!("ecs.entities.componentRegistry");
+	alias Components = ComponentRegistry!("ecs.entities.componentRegistry");
+	auto registry = new Components.Registry();
 
 	auto entity = EntityID(1);
 
@@ -167,4 +212,29 @@ unittest
 	registry.removeAll(entity);
 	assert(registry.has!TestComponentA(entity) == false);
 	assert(registry.has!TestComponentB(entity) == false);
+}
+
+unittest
+{
+	alias Components = ComponentRegistry!("ecs.entities.componentRegistry");
+	auto registry = new Components.Registry();
+
+	@safe
+	class Watcher
+	{
+		this(EntityID entity) { this.entity = entity; }
+		EntityID entity;
+		bool signalRecieved = false;
+		void watch(Components.Entity e)
+		{
+			assert(e == entity);
+			signalRecieved = true;
+		}
+	}
+
+	auto entity = EntityID(1);
+	auto watcher = new Watcher(entity);
+	registry.OnAdded!TestComponentA().connect((&watcher.watch));
+	registry.add(entity, TestComponentA());
+	assert(watcher.signalRecieved);
 }

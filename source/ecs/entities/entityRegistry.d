@@ -6,48 +6,12 @@ import ecs.entities.componentRegistry;
 template EntityRegistry(ComponentModules...)
 {
 	alias Components = ComponentRegistry!(ComponentModules);
-
-	struct Entity
-	{
-		alias id this;
-
-		this(EntityID id, Components registry)
-		{
-			this.id = id;
-			this._registry = registry;
-		}
-
-		immutable EntityID id;
-		private Components _registry;
-		Components componentRegistry() { return _registry; }
-
-
-		bool has(TComponent)()
-		{
-			return _registry.has!TComponent(this);
-		}
-
-		Entity add(TComponent)(TComponent component)
-		{
-			_registry.add(this, component);
-			return this;
-		}
-		Entity remove(TComponent)()
-		{
-			_registry.remove!TComponent(this);
-			return this;
-		}
-		TComponent get(TComponent)()
-		{
-			return _registry.get!TComponent(this);
-		}
-	}
+	alias Entity = Components.Entity;
 
 	class Registry
 	{
-
-		private Components componentRegistry = new Components();
-		public Components ComponentRegistry() { return componentRegistry; }
+		private Components.Registry componentRegistry = new Components.Registry();
+		public Components.Registry ComponentRegistry() { return componentRegistry; }
 
 		Entity create()
 		{
@@ -62,8 +26,6 @@ template EntityRegistry(ComponentModules...)
 	private:
 		ulong nextID = 1;
 	}
-
-
 }
 
 version(unittest)
