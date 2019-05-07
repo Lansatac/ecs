@@ -6,7 +6,7 @@ ecs.so
 ecs.dylib
 ecs.dll
 ecs.a
-ecs.lib
+*ecs.lib
 ecs-test-*
 *.exe
 *.o
