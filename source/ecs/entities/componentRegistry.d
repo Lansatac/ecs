@@ -82,7 +82,7 @@ template ComponentRegistry(ComponentModules...)
 		}
 	}
 
-
+	@safe
 	struct Entity
 	{
 		alias id this;
@@ -116,6 +116,10 @@ template ComponentRegistry(ComponentModules...)
 		{
 			return _registry.get!TComponent(this);
 		}
+
+		bool opEquals(const Entity other) { return id == other.id; }
+	    bool opEquals(ref const Entity other) { return id == other.id; }
+	    bool opEquals(const Entity other) const { return id == other.id; } 
 	}
 
 	@trusted // bleh :(

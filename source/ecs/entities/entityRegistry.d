@@ -8,6 +8,7 @@ template EntityRegistry(ComponentModules...)
 	alias Components = ComponentRegistry!(ComponentModules);
 	alias Entity = Components.Entity;
 
+	@safe
 	class Registry
 	{
 		private Components.Registry componentRegistry = new Components.Registry();

@@ -51,6 +51,7 @@ version(unittest)
 	}
 }
 
+@safe
 unittest
 {
 	import ecs.entities.entityRegistry;
@@ -72,6 +73,7 @@ unittest
 			super(entityRegistry.ComponentRegistry);
 			expectedEntity = entity;
 		}
+		
 		override void HandleRemoved(Entity entity, TestComponent component)
 		{
 			assert(entity == expectedEntity);

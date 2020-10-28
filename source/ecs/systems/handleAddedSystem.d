@@ -43,12 +43,13 @@ version(unittest)
 {
 	import ecs.entities.component;
 
-	@Component
+	@Component @safe
 	struct TestComponent
 	{
 	}
 }
 
+@safe
 unittest
 {
 	import ecs.entities.entityRegistry;
@@ -61,6 +62,7 @@ unittest
 	auto entity1 = entities.create;
 	auto entity2 = entities.create;
 
+	@safe
 	class ListenerSystem : HandleAdded!TestComponent
 	{
 		Entity expectedEntity;
@@ -70,6 +72,7 @@ unittest
 			super(entityRegistry.ComponentRegistry);
 			expectedEntity = entity;
 		}
+
 		override void HandleAdded(Entity entity)
 		{
 			assert(entity == expectedEntity);

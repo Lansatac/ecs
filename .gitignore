@@ -13,3 +13,4 @@ ecs-test-*
 *.obj
 *.lst
 *.sublime-workspace
+*.sublime-project
