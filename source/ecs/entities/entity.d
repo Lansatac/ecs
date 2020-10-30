@@ -12,7 +12,5 @@ struct EntityID
 		this.id = id;
 	}
 
-	bool opEquals(const EntityID other) { return id == other.id; }
-    bool opEquals(ref const EntityID other) { return id == other.id; }
-    bool opEquals(const EntityID other) const { return id == other.id; } 
+	bool opEquals()(auto ref const EntityID other) const { return id == other.id; }
 }
