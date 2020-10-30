@@ -4,6 +4,7 @@
 	"authors": [
 		"jyegge"
 	],
+	"targetPath": "build",
 	"description": "An entity-component system.",
 	"copyright": "Copyright © 2019, jyegge",
 	"license": "proprietary"
