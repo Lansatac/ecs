@@ -1,7 +1,9 @@
-module ecs.systems.handleRemovedSystem;
+module ecs.systems.handleremovedsystem;
 
-import ecs.entities.componentRegistry;
+import ecs.entities.componentregistry;
 import ecs.systems.system;
+
+version(unittest) import fluent.asserts;
 
 template HandleRemovedSystem(ComponentModules...)
 {
@@ -52,17 +54,17 @@ version(unittest)
 }
 
 @safe
+@("Removed system should dispatch remove events")
 unittest
 {
-	import ecs.entities.entityRegistry;
+	import ecs.entities.entityRegistry : EntityRegistry;
 
-	alias Entities = EntityRegistry!("ecs.systems.handleRemovedSystem");
-	alias HandleRemoved = HandleRemovedSystem!("ecs.systems.handleRemovedSystem");
+	alias Entities = EntityRegistry!("ecs.systems.handleremovedsystem");
+	alias HandleRemoved = HandleRemovedSystem!("ecs.systems.handleremovedsystem");
 	alias Entity = Entities.Entity;
 	auto entities = new Entities.Registry();
 
 	auto entity1 = entities.create;
-	auto entity2 = entities.create;
 
 	class ListenerSystem : HandleRemoved!TestComponent
 	{
@@ -86,7 +88,4 @@ unittest
 	assert(listener.handled == false);
 	listener.Update(0f);
 	assert(listener.handled == true);
-	listener.handled = false;
-	listener.Update(0f);
-	assert(listener.handled == false);
 }

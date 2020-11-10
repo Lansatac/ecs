@@ -1,7 +1,9 @@
-module ecs.entities.componentRegistry;
+module ecs.entities.componentregistry;
 
 import ecs.entities.component;
 import ecs.entities.entity;
+
+ version(unittest) import fluent.asserts;
 
 template ComponentRegistry(ComponentModules...)
 {
@@ -42,9 +44,7 @@ template ComponentRegistry(ComponentModules...)
 				);
 		}
 
-
-
-		public void removeAll(EntityID entity)
+		public void removeAll(EntityID entity) nothrow
 		{
 			static foreach(ComponentType; Components)
 			{
@@ -52,20 +52,28 @@ template ComponentRegistry(ComponentModules...)
 			}
 		}
 
-		void add(TComponent)(EntityID entity, TComponent component)
+		void add(TComponent)(EntityID entity, TComponent component) nothrow
 		{
 			registryStorage!TComponent[entity] = component;
-			OnAdded!TComponent.emit(Entity(entity, this));
+			try
+			{
+				OnAdded!TComponent.emit(Entity(entity, this));
+			}
+			catch(Exception){}
 		}
 
-		void remove(TComponent)(EntityID entity)
+		void remove(TComponent)(EntityID entity) nothrow
 		{
 			auto component = get!TComponent(entity);
 			registryStorage!TComponent.remove(entity);
-			OnRemoved!TComponent.emit(Entity(entity, this), component);
+			try
+			{
+				OnRemoved!TComponent.emit(Entity(entity, this), component);
+			}
+			catch(Exception){}
 		}
 
-		bool has(TComponent)(EntityID entity)
+		bool has(TComponent)(EntityID entity) nothrow
 		{
 			return (entity in registryStorage!TComponent) != null;
 		}
@@ -77,7 +85,7 @@ template ComponentRegistry(ComponentModules...)
 
 		private TComponent[] getAllComponents(TComponent)()
 		{
-			import std.range;
+			import std.range : byValue;
 			return registryStorage!TComponent.byValue().array;
 		}
 	}
@@ -85,16 +93,18 @@ template ComponentRegistry(ComponentModules...)
 	@safe
 	struct Entity
 	{
+		import std.experimental.typecons : Final, makeFinal;
+
 		alias id this;
 
-		this(EntityID id, Registry registry)
+		this(EntityID id, Registry registry) pure nothrow
 		{
 			this.id = id;
-			this._registry = registry;
+			this._registry = makeFinal(registry);
 		}
 
 		immutable EntityID id;
-		private Registry _registry;
+		private Final!Registry _registry;
 		Registry componentRegistry() { return _registry; }
 
 		bool has(TComponent)()
@@ -181,11 +191,13 @@ version(unittest)
 	{
 		string a;
 	}
+
+	alias Components = ComponentRegistry!("ecs.entities.componentregistry");
 }
 
+@("Add and remove components")
 unittest
 {
-	alias Components = ComponentRegistry!("ecs.entities.componentRegistry");
 	auto registry = new Components.Registry();
 
 	auto entity = EntityID(1);
@@ -214,13 +226,13 @@ unittest
 	assert(registry.has!TestComponentA(entity) == true);
 	assert(registry.has!TestComponentB(entity) == true);
 	registry.removeAll(entity);
-	assert(registry.has!TestComponentA(entity) == false);
+	registry.has!TestComponentA(entity).should.equal(false);
 	assert(registry.has!TestComponentB(entity) == false);
 }
 
+@("listen for add component event")
 unittest
 {
-	alias Components = ComponentRegistry!("ecs.entities.componentRegistry");
 	auto registry = new Components.Registry();
 
 	@safe
@@ -240,5 +252,11 @@ unittest
 	auto watcher = new Watcher(entity);
 	registry.OnAdded!TestComponentA().connect((&watcher.watch));
 	registry.add(entity, TestComponentA());
-	assert(watcher.signalRecieved);
+	watcher.signalRecieved.should.equal(true);
+
+	
+	watcher.signalRecieved = false;
+	registry.add(entity, TestComponentB());
+	watcher.signalRecieved.should.equal(false);
+
 }

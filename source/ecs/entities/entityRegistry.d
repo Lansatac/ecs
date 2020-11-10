@@ -1,7 +1,9 @@
 module ecs.entities.entityRegistry;
 
 import ecs.entities.entity;
-import ecs.entities.componentRegistry;
+import ecs.entities.componentregistry;
+
+version(unittest) import fluent.asserts;
 
 template EntityRegistry(ComponentModules...)
 {
@@ -40,24 +42,27 @@ version(unittest)
 	}
 }
 
+@("creating entities should have unique IDs")
 unittest
 {
 	alias Entities = EntityRegistry!();
 	auto entities = new Entities.Registry();
 
-	auto entity1 = entities.create();
-	auto entity2 = entities.create();
+	const auto entity1 = entities.create();
+	const auto entity2 = entities.create();
 	
 	assert(entity1.id != entity2.id);
 }
 
+@("adding components to entities should add component")
 unittest
 {
 	alias Entities = EntityRegistry!("ecs.entities.entityRegistry");
+
 	auto entities = new Entities.Registry();
 	auto entity = entities.create();
 
-	assert(entity.has!TestComponent == false);
+	entity.has!TestComponent.should.equal(false);
 	entity.add(TestComponent(5));
 	assert(entity.has!TestComponent == true);
 	assert(entity.get!(TestComponent).a == 5);
@@ -67,16 +72,16 @@ unittest
 	assert(entity.has!TestComponent == false);
 }
 
-
+@("destroying entity should remove components")
 unittest
 {
 	alias Entities = EntityRegistry!("ecs.entities.entityRegistry");
+
 	auto entities = new Entities.Registry();
 	auto entity = entities.create();
 
 	entity.add(TestComponent(5));
-	assert(entity.has!TestComponent == true);
-
 	entities.destroy(entity);
-	assert(entity.has!TestComponent == false);
+
+	entity.has!TestComponent.should.equal(false);
 }

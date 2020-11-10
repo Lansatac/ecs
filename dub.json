@@ -7,5 +7,17 @@
 	"targetPath": "build",
 	"description": "An entity-component system.",
 	"copyright": "Copyright © 2019, jyegge",
-	"license": "proprietary"
+	"license": "proprietary",
+	"configurations": [
+		{
+			"name": "library"
+		},
+		{
+			"name": "unittest",
+			"dependencies": {
+				"silly": ">=1.0.2",
+				"fluent-asserts": ">=0.13.3"
+			}
+		}
+	]
 }

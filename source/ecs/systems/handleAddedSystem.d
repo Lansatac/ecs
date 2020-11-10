@@ -1,7 +1,9 @@
-module ecs.systems.handleAddedSystem;
+module ecs.systems.handleaddedsystem;
 
-import ecs.entities.componentRegistry;
+import ecs.entities.componentregistry;
 import ecs.systems.system;
+
+version(unittest) import fluent.asserts;
 
 template HandleAddedSystem(ComponentModules...)
 {
@@ -41,26 +43,28 @@ template HandleAddedSystem(ComponentModules...)
 
 version(unittest)
 {
+	import ecs.entities.entityRegistry : EntityRegistry;
 	import ecs.entities.component;
+
+	alias Entities = EntityRegistry!("ecs.systems.handleaddedsystem");
 
 	@Component @safe
 	struct TestComponent
 	{
 	}
+	
+	alias HandleAdded = HandleAddedSystem!("ecs.systems.handleaddedsystem");
 }
 
+@("listener systems should handle entities that have components added")
 @safe
 unittest
 {
-	import ecs.entities.entityRegistry;
 
-	alias Entities = EntityRegistry!("ecs.systems.handleAddedSystem");
-	alias HandleAdded = HandleAddedSystem!("ecs.systems.handleAddedSystem");
 	alias Entity = Entities.Entity;
 	auto entities = new Entities.Registry();
 
 	auto entity1 = entities.create;
-	auto entity2 = entities.create;
 
 	@safe
 	class ListenerSystem : HandleAdded!TestComponent
