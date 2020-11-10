@@ -1,4 +1,4 @@
-module ecs.entities.componentregistry;
+module ecs.entities.component.registry;
 
 import ecs.entities.component;
 import ecs.entities.entity;
@@ -192,7 +192,7 @@ version(unittest)
 		string a;
 	}
 
-	alias Components = ComponentRegistry!("ecs.entities.componentregistry");
+	alias Components = ComponentRegistry!("ecs.entities.component.registry");
 }
 
 @("Add and remove components")

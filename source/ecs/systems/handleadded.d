@@ -1,6 +1,6 @@
-module ecs.systems.handleaddedsystem;
+module ecs.systems.handleadded;
 
-import ecs.entities.componentregistry;
+import ecs.entities.component.registry;
 import ecs.systems.system;
 
 version(unittest) import fluent.asserts;
@@ -25,42 +25,41 @@ template HandleAddedSystem(ComponentModules...)
 			added ~= entity;
 		}
 
-		final void Update(float elapsedTime)
+		final void update(float elapsedTime)
 		{
 			if(added.length > 0)
 			{
 				foreach(entity;added)
 				{
-					HandleAdded(entity);
+					handleAdded(entity);
 				}
 				added.length = 0;
 			}
 		}
 
-		protected abstract void HandleAdded(Entity entity);
+		protected abstract void handleAdded(Entity entity);
 	}
 }
 
 version(unittest)
 {
-	import ecs.entities.entityRegistry : EntityRegistry;
-	import ecs.entities.component;
+	import ecs.entities.registry : EntityRegistry;
+	import ecs.entities.component.component;
 
-	alias Entities = EntityRegistry!("ecs.systems.handleaddedsystem");
+	alias Entities = EntityRegistry!("ecs.systems.handleadded");
 
 	@Component @safe
 	struct TestComponent
 	{
 	}
 	
-	alias HandleAdded = HandleAddedSystem!("ecs.systems.handleaddedsystem");
+	alias HandleAdded = HandleAddedSystem!("ecs.systems.handleadded");
 }
 
-@("listener systems should handle entities that have components added")
 @safe
+@("listener systems should handle entities that have components added")
 unittest
 {
-
 	alias Entity = Entities.Entity;
 	auto entities = new Entities.Registry();
 
@@ -77,7 +76,7 @@ unittest
 			expectedEntity = entity;
 		}
 
-		override void HandleAdded(Entity entity)
+		override void handleAdded(Entity entity)
 		{
 			assert(entity == expectedEntity);
 			handled = true;
@@ -86,9 +85,9 @@ unittest
 	auto listener = new ListenerSystem(entities, entity1);
 	entity1.add(TestComponent());
 	assert(listener.handled == false);	//Don't process add until update
-	listener.Update(0f);
+	listener.update(0f);
 	assert(listener.handled == true);
 	listener.handled = false;
-	listener.Update(0f);				//Don't process the same add again
+	listener.update(0f);				//Don't process the same add again
 	assert(listener.handled == false);
 }

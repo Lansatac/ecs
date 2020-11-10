@@ -1,4 +1,4 @@
-module ecs.systems.systemGroup;
+module ecs.systems.group;
 
 import ecs.systems.system;
 
@@ -18,27 +18,27 @@ final class SystemGroup : Initializing, Updating
 		return this;
 	}
 
-	void StartUp()
+	void startUp()
 	{
 		foreach(initializee;initializing)
 		{
-			initializee.StartUp();
+			initializee.startUp();
 		}
 	}
 
-	void ShutDown()
+	void shutDown()
 	{
 		foreach(initializee;initializing)
 		{
-			initializee.ShutDown();
+			initializee.shutDown();
 		}
 	}
 
-	void Update(float elapsedTime)
+	void update(float elapsedTime)
 	{
 		foreach(updatee; updating)
 		{
-			updatee.Update(elapsedTime);
+			updatee.update(elapsedTime);
 		}
 	}
 

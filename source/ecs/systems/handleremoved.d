@@ -1,6 +1,6 @@
-module ecs.systems.handleremovedsystem;
+module ecs.systems.handleremoved;
 
-import ecs.entities.componentregistry;
+import ecs.entities.component.registry;
 import ecs.systems.system;
 
 version(unittest) import fluent.asserts;
@@ -27,25 +27,25 @@ template HandleRemovedSystem(ComponentModules...)
 			removed ~= tuple!("Entity", "Component")(entity, component);
 		}
 
-		final void Update(float elapsedTime)
+		final void update(float elapsedTime)
 		{
 			if(removed.length > 0)
 			{
 				foreach(removedEntity;removed)
 				{
-					HandleRemoved(removedEntity.Entity, removedEntity.Component);
+					handleRemoved(removedEntity.Entity, removedEntity.Component);
 				}
 				removed.length = 0;
 			}
 		}
 
-		protected abstract void HandleRemoved(Entity entity, TComponent component);
+		protected abstract void handleRemoved(Entity entity, TComponent component);
 	}
 }
 
 version(unittest)
 {
-	import ecs.entities.component;
+	import ecs.entities.component.component;
 
 	@Component
 	struct TestComponent
@@ -57,10 +57,10 @@ version(unittest)
 @("Removed system should dispatch remove events")
 unittest
 {
-	import ecs.entities.entityRegistry : EntityRegistry;
+	import ecs.entities.registry : EntityRegistry;
 
-	alias Entities = EntityRegistry!("ecs.systems.handleremovedsystem");
-	alias HandleRemoved = HandleRemovedSystem!("ecs.systems.handleremovedsystem");
+	alias Entities = EntityRegistry!("ecs.systems.handleremoved");
+	alias HandleRemoved = HandleRemovedSystem!("ecs.systems.handleremoved");
 	alias Entity = Entities.Entity;
 	auto entities = new Entities.Registry();
 
@@ -76,7 +76,7 @@ unittest
 			expectedEntity = entity;
 		}
 		
-		override void HandleRemoved(Entity entity, TestComponent component)
+		override void handleRemoved(Entity entity, TestComponent component)
 		{
 			assert(entity == expectedEntity);
 			handled = true;
@@ -86,6 +86,6 @@ unittest
 	entity1.add(TestComponent());
 	entity1.remove!TestComponent;
 	assert(listener.handled == false);
-	listener.Update(0f);
+	listener.update(0f);
 	assert(listener.handled == true);
 }

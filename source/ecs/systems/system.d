@@ -4,11 +4,11 @@ import ecs.entities.entity;
 
 interface Initializing
 {
-	void StartUp();
-	void ShutDown();
+	void startUp();
+	void shutDown();
 }
 
 interface Updating
 {
-	void Update(float elapsedTime);
+	void update(float elapsedTime);
 }

@@ -1,7 +1,7 @@
-module ecs.entities.entityRegistry;
+module ecs.entities.registry;
 
 import ecs.entities.entity;
-import ecs.entities.componentregistry;
+import ecs.entities.component.registry;
 
 version(unittest) import fluent.asserts;
 
@@ -57,7 +57,7 @@ unittest
 @("adding components to entities should add component")
 unittest
 {
-	alias Entities = EntityRegistry!("ecs.entities.entityRegistry");
+	alias Entities = EntityRegistry!("ecs.entities.registry");
 
 	auto entities = new Entities.Registry();
 	auto entity = entities.create();
@@ -75,7 +75,7 @@ unittest
 @("destroying entity should remove components")
 unittest
 {
-	alias Entities = EntityRegistry!("ecs.entities.entityRegistry");
+	alias Entities = EntityRegistry!("ecs.entities.registry");
 
 	auto entities = new Entities.Registry();
 	auto entity = entities.create();
